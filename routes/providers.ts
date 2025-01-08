@@ -7,7 +7,7 @@ import {
   stringToU8a,
   u8aToHex,
 } from "https://deno.land/x/polkadot@0.2.45/util/mod.ts";
-import { Hono } from "jsr:@hono/hono";
+import { Hono } from "@hono/hono";
 import { Client } from "https://deno.land/x/postgres@v0.19.3/mod.ts";
 
 const db = new Client({

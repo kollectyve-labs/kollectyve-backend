@@ -18,9 +18,15 @@ CREATE TABLE providers (
     reputation_score INTEGER NOT NULL,
     registration_block INTEGER NOT NULL,
     last_updated INTEGER NOT NULL,
-    status VARCHAR(20) NOT NULL,
+    email VARCHAR(255),
+    password VARCHAR(100)  NOT NULL,
+    status VARCHAR(20) CHECK (validate_status(status)),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
+CREATE OR REPLACE FUNCTION validate_status(status text)
+RETURNS boolean AS $$
+BEGIN
+    RETURN status IN ('active', 'inactive', 'suspended', 'terminated');
+END;
+$$ LANGUAGE plpgsql;

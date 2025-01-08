@@ -6,3 +6,7 @@ Kumulus Cloud Conductor codebase
 ```bash
 deno run --env -A app.ts
 ```
+
+## Provider Registration
+
+Initially self managed till later stages
