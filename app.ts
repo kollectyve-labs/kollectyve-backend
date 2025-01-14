@@ -1,10 +1,9 @@
-import { Hono } from "jsr:@hono/hono";
-import { faucet, sigverif, providers } from "./routes/routes.ts";
+import { Hono } from "@hono/hono";
+import { faucet, providers } from "./routes/routes.ts";
 
 const app = new Hono();
 
-app.route("/faucet", faucet); 
-app.route("/providers", providers); 
-app.route("/sigverif", sigverif); 
+app.route("/faucet", faucet);
+app.route("/providers", providers);
 
 Deno.serve(app.fetch);

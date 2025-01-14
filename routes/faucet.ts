@@ -2,9 +2,8 @@ import { Hono } from "@hono/hono";
 
 const faucet = new Hono();
 
-faucet.get("/portal", async (c) => { 
-    
-    return c.html(`
+faucet.get("/portal", async (c) => {
+  return c.html(`
         <html>
             <body>
                 <h1>Kollectyve Network Faucet</h1>
@@ -31,13 +30,11 @@ faucet.get("/portal", async (c) => {
             </body>
         </html>
     `);
+});
 
-
- });
-
- faucet.post("/give", async (c) => {
-    //ToDo: Handle token sending 
-    return c.json({ status: "success", message: "Token Sent!!!" });
+faucet.post("/give", async (c) => {
+  //TODO: Handle token sending
+  return c.json({ status: "success", message: "Token Sent!!!" });
 });
 
 export { faucet };
