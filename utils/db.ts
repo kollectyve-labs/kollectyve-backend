@@ -1,9 +1,9 @@
-import { HealthStatEntity, ProviderEntity } from "./entities.ts";
+import type { HealthStat, Provider } from "./models.ts";
 
-export const kv = await Deno.openKv();
+const kv = await Deno.openKv();
 
 // Create a provider
-export async function createProvider(provider: ProviderEntity) {
+export async function createProvider(provider: Provider) {
   const providerKey = ["providers", provider.address];
   const resp = await kv.set(providerKey, provider);
   if (!resp.ok) throw new Error(`Failed to create provider: ${provider}`);
@@ -12,12 +12,12 @@ export async function createProvider(provider: ProviderEntity) {
 // Get a provider
 export async function getProvider(address: string) {
   const providerKey = ["providers", address];
-  const resp = await kv.get<ProviderEntity>(providerKey);
+  const resp = await kv.get<Provider>(providerKey);
   return resp.value;
 }
 
 // Update a provider
-export async function updateProvider(provider: ProviderEntity) {
+export async function updateProvider(provider: Provider) {
   const providerKey = ["providers", provider.address];
   const resp = await kv.set(providerKey, provider);
   if (!resp.ok) throw new Error(`Failed to update provider: ${provider}`);
@@ -31,7 +31,7 @@ export async function deleteProvider(address: string) {
 
 // List all providers
 export async function getProviders() {
-  const iter = kv.list<ProviderEntity>({ prefix: ["providers"] });
+  const iter = kv.list<Provider>({ prefix: ["providers"] });
   const providers = [];
   for await (const { value } of iter) {
     providers.push(value);
@@ -40,11 +40,11 @@ export async function getProviders() {
 }
 
 // Store health stats in provider's history array
-export async function storeHealthstats(stats: HealthStatEntity) {
+export async function storeHealthstats(stats: HealthStat) {
   const historyKey = ["provider_healthstats_history", stats.address];
 
   // Get current history first
-  const currentResp = await kv.get<HealthStatEntity[]>(historyKey);
+  const currentResp = await kv.get<HealthStat[]>(historyKey);
   const currentHistory = currentResp.value ?? [];
   const newHistory = [...currentHistory, stats];
 
@@ -62,6 +62,6 @@ export async function storeHealthstats(stats: HealthStatEntity) {
 // Get all historical health stats for a provider
 export async function getProviderHealthHistory(address: string) {
   const historyKey = ["provider_healthstats_history", address];
-  const resp = await kv.get<HealthStatEntity[]>(historyKey);
+  const resp = await kv.get<HealthStat[]>(historyKey);
   return resp.value ?? [];
 }

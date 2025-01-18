@@ -4,7 +4,8 @@
   "exports": "./mod.ts",
   "imports": {
     "@deno/kv-oauth": "jsr:@deno/kv-oauth@^0.11.0",
-    "@hono/hono": "jsr:@hono/hono@^4.6.16",
-    "nodemailer": "npm:nodemailer@^6.9.16"
+    "@firebase/app": "npm:@firebase/app@^0.10.18",
+    "@firebase/auth": "npm:@firebase/auth@^1.8.2",
+    "@hono/hono": "jsr:@hono/hono@^4.6.16"
   }
 }

@@ -1,13 +1,17 @@
 # kumulus-conductor
 
-Kumulus Cloud Conductor codebase
+Kumulus Cloud and Relai orchestration codebase
 
 ## Running the app
+
+With Postgres as a database
 
 ```bash
 deno run --env -A app.ts
 ```
 
-## Provider Registration
+With Deno KV (locally Deno KV need the `--unstable-kv` flag)
 
-Initially self managed till later stages
+```bash
+deno run  -A --unstable-kv app.ts
+```

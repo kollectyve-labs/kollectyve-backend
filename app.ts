@@ -1,9 +1,10 @@
 import { Hono } from "@hono/hono";
-import { faucet, providers } from "./routes/routes.ts";
+import { auth, faucet, kumulus } from "./routes/routes.ts";
 
 const app = new Hono();
 
+app.route("/auth", auth);
 app.route("/faucet", faucet);
-app.route("/providers", providers);
+app.route("/kumulus", kumulus);
 
 Deno.serve(app.fetch);
