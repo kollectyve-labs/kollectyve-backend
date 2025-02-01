@@ -138,7 +138,7 @@ kumulus.post("/healthstats", async (c) => {
     };
 
     await storeHealthstats(healthstat);
-    return c.json({ message: "Healthstats stored " }, 201);
+    return c.json({ message: "Healthstats stored successfully" }, 201);
   } catch (err) {
     console.error("Error storing healthstats:", err);
     return c.json({ message: "Failed to store healthstats" }, 500);

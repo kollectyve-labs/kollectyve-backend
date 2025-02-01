@@ -192,6 +192,7 @@ export const authMiddleware = (requiredRoles: string[] = []) => {
 };
 
 // Configure CORS
+/*
 auth.use("/*", cors({
   origin: (origin) => {
     const allAllowedOrigins = Object.values(apps)
@@ -200,6 +201,7 @@ auth.use("/*", cors({
   },
   credentials: true,
 }));
+*/
 
 // Registration endpoint
 auth.post("/register", async (c) => {
