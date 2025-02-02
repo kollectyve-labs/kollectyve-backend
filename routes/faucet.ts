@@ -2,7 +2,7 @@ import { Hono } from "@hono/hono";
 
 const faucet = new Hono();
 
-faucet.get("/portal", async (c) => {
+faucet.get("/portal", (c) => {
   return c.html(`
         <html>
             <body>
@@ -16,7 +16,7 @@ faucet.get("/portal", async (c) => {
                     document.getElementById('faucetForm').addEventListener('submit', async (event) => {
                         event.preventDefault();
                         const address = document.getElementById('address').value;
-                        const response = await fetch('http://localhost:8000/faucet/give', {
+                        const response = await fetch('https://test-kumulus-backend.deno.dev/faucet/give', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -32,7 +32,7 @@ faucet.get("/portal", async (c) => {
     `);
 });
 
-faucet.post("/give", async (c) => {
+faucet.post("/give", (c) => {
   //TODO: Handle token sending
   return c.json({ status: "success", message: "Token Sent!!!" });
 });

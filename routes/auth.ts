@@ -37,6 +37,47 @@ const fbAuth = getAuth(firebaseApp);
 const auth = new Hono();
 const kv = await Deno.openKv();
 
+// App configurations
+const apps: Record<string, AppConfig> = {
+  KUMULUS_PROVIDERS: {
+    id: "kumulusprovs",
+    name: "Kumulus Cloud Provider Console",
+    allowedOrigins: [
+      "https://kumulus-provider.kollectyve.network",
+      "http://localhost:3000"
+    ],
+    redirectUrls: []
+  },
+  KUMULUS_DEVELOPERS: {
+    id: "kumulusdevs",
+    name: "Kumulus Cloud Developer Console",
+    allowedOrigins: [
+      "kumulus-developer.kollectyve.network",
+      "http://localhost:3000"
+    ],
+    redirectUrls: []
+  },
+  RELAI: {
+    id: "relai",
+    name: "Relai Platform Console",
+    allowedOrigins: [
+      "relai.kollectyve.network",
+      "http://localhost:3000"
+    ],
+    redirectUrls: []
+  },
+  KUMULUS_CLI: {
+    id: "kumuluscli",
+    name: "Kumulus CLI",
+    allowedOrigins: [
+      "kumulus-developer.kollectyve.network",
+      "http://localhost:3000"
+    ],
+    redirectUrls: []
+  },
+};
+
+
 function handleFirebaseError(error: FirebaseError) {
   switch (error.code) {
     case 'auth/email-already-in-use':
@@ -84,37 +125,6 @@ async function registerUser(
 
   return { userId };
 }
-
-// App configurations
-const apps: Record<string, AppConfig> = {
-  KUMULUS_PROVIDERS: {
-    id: "kumulusprovs",
-    name: "Kumulus Cloud Provider Console",
-    allowedOrigins: [
-      "https://kumulus-provider.kollectyve.network",
-      "http://localhost:3000"
-    ],
-    redirectUrls: []
-  },
-  KUMULUS_DEVELOPERS: {
-    id: "kumulusdevs",
-    name: "Kumulus Cloud Developer Console",
-    allowedOrigins: [
-      "kumulus-developer.kollectyve.network",
-      "http://localhost:3000"
-    ],
-    redirectUrls: []
-  },
-  RELAI: {
-    id: "relai",
-    name: "Relai Platform Console",
-    allowedOrigins: [
-      "relai.kollectyve.network",
-      "http://localhost:3000"
-    ],
-    redirectUrls: []
-  }
-};
 
 // Token verification function
 async function verifyToken(token: string): Promise<User> {
@@ -331,6 +341,89 @@ auth.post("/link-wallet", authMiddleware(), async (c) => {
   } catch (error) {
     return c.json({ error: "Failed to link wallet" }, 500);
   }
+});
+
+// CLI Login Page (Opens in Browser)
+auth.get("/cli-portal", async (c) => {
+  const state = c.req.query("state");
+
+  if (!state) {
+    return c.text("Missing state parameter", 400);
+  }
+
+  return c.html(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Kumulus CLI Authentication</title>
+      </head>
+      <body>
+        <h1>Kumulus CLI Authentication</h1>
+        <p>Please log in to authenticate your CLI session:</p>
+        <form id="loginForm">
+          <input type="hidden" id="state" value="${state}">
+          
+          <div>
+            <label>Email: <input type="email" id="email" required></label>
+          </div>
+          <div>
+            <label>Password: <input type="password" id="password" required></label>
+          </div>
+          <button type="submit">Login</button>
+        </form>
+        <p id="status"></p>
+        <script>
+          document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const state = document.getElementById('state').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const response = await fetch('/auth/cli-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ state, email, password })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+              document.getElementById('status').textContent = "Success! You can close this window.";
+              setTimeout(() => window.close(), 2000);
+            } else {
+              document.getElementById('status').textContent = data.error || "Authentication failed";
+            }
+          });
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+// CLI Login API
+auth.post("/cli-login", async (c) => {
+  const { state, email, password } = await c.req.json();
+  if (!state) return c.json({ error: "Missing state" }, 400);
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(fbAuth, email, password);
+    const token = await userCredential.user.getIdToken();
+    
+    await kv.set(["cli-auth", state], { token, expires_at: Date.now() + 3600 * 1000 });
+
+    return c.json({ success: true });
+  } catch (error) {
+    return c.json({ error: "Authentication failed" }, 500);
+  }
+});
+
+// CLI Polling Endpoint
+auth.get("/cli-token", async (c) => {
+  const state = c.req.query("state");
+  const session = await kv.get(["cli-auth", state]);
+  console.log('trying to get the session : ',session)
+  if (!session) return c.json({ error: "Not authenticated yet" }, 404);
+
+  return c.json(session);
 });
 
 export { auth };

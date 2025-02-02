@@ -15,3 +15,6 @@ With Deno KV (locally Deno KV need the `--unstable-kv` flag)
 ```bash
 deno run  -A --unstable-kv app.ts
 ```
+
+## Testing endpoint
+
