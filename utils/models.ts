@@ -1,22 +1,23 @@
-export interface User {
-  id: string;
-  email: string;
-  password: string;
-  salt: string;
-  role: "provider" | "developer" | "relai";
+// deno-lint-ignore-file no-explicit-any
+// Type definitions for better type safety
+export interface UserData {
+  userId: string;
+  roles: string[];
+  walletAddress?: string;
+  wallets?: string[];
+  providerData?: ProviderData;
   metadata?: Record<string, any>; // Additional metadata
 }
 
-export interface Provider {
-  address: string;
-  name: string;
+export interface ProviderData {
+  name?: string;
   website?: string;
-  email?: string;
   total_resources: 0;
   reputation_score?: number;
   registration_block?: number;
   last_updated?: number;
-  status: "active" | "inactive" | "suspended" | "terminated";
+  status?: "inactive" | "active" | "suspended" | "terminated";
+  ipAddress: string;
 }
 
 export interface HealthStat {
@@ -24,4 +25,10 @@ export interface HealthStat {
   message: string;
   signature: string;
   verified_at?: string;
+}
+
+export interface AppConfig {
+  id: string;
+  name: string;
+  allowedOrigins: string[];
 }
