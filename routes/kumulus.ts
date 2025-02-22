@@ -32,7 +32,7 @@ kumulus.get("/providers/:address", appIdMiddleware(), async (c) => {
   }
 });
 
-// Get a provider by email 
+// Get a provider by email
 kumulus.get("/providers/email/:email", async (c) => {
   try {
     const email = c.req.param("email");
@@ -151,7 +151,11 @@ kumulus.post("/store-ip", async (c) => {
       return c.json({ message: "Provider not found" }, 404);
     }
 
-    const isValidSignature = await verifySignature(ipAddress, signature, ipAddress);
+    const isValidSignature = await verifySignature(
+      ipAddress,
+      signature,
+      ipAddress,
+    );
     if (!isValidSignature) {
       return c.json({ message: "Invalid signature" }, 401);
     }

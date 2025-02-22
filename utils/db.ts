@@ -14,7 +14,6 @@ import {
 } from "./constants.ts";
 import { ProviderData } from "../utils/models.ts";
 
-
 const kv = await Deno.openKv();
 
 const firebaseConfig = {
@@ -65,8 +64,10 @@ export async function setWallet(walletAddress: string, email: string) {
   return await kv.set([KV_WALLET_KEY, walletAddress], email);
 }
 
-
-export async function updateProvider(email: string, updates: Partial<ProviderData>) {
+export async function updateProvider(
+  email: string,
+  updates: Partial<ProviderData>,
+) {
   const providerKey = [KV_USERS_KEY, email];
 
   // Fetch the existing provider data
@@ -100,11 +101,10 @@ export async function getProvider(address: string) {
 
 // Get Provider By Email
 export async function getProviderByEmail(email: string): Promise<UserData> {
-  const providers = [ KV_USERS_KEY, email];
+  const providers = [KV_USERS_KEY, email];
   const resp = await kv.get<UserData>(providers);
   return resp.value;
 }
-
 
 // List all providers
 export async function getProviders() {
@@ -114,7 +114,7 @@ export async function getProviders() {
 // List all providers
 export async function getActiveProviders(): Promise<[]> {
   // TODO
-    return []
+  return [];
 }
 
 // Store health stats in provider's history array
@@ -149,17 +149,15 @@ export async function getProviderHealthHistory(address: string) {
   return resp.value ?? [];
 }
 
-
-export async function pickProvider(){
+export async function pickProvider() {
   // TODO
   // Retrieve the list of active providers
   const activeProviders = await getActiveProviders();
   // Pass the list to the a provider slection Algorithm
   const providerData = providerSelection(activeProviders);
   return providerData;
-
 }
 
 function providerSelection(providerList: []): {} {
-  return {}
+  return {};
 }
