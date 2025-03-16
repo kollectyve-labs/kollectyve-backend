@@ -13,14 +13,12 @@ import {
 } from "../utils/auth-helpers.ts";
 import { FirebaseError } from "@firebase/app";
 import {
-  checkWallet,
-  fbAuth,
   getUserData,
   registerUser,
   setUserData,
   setWallet,
 } from "../utils/db.ts";
-import { APP_ID_HEAD, KV_USERS_KEY } from "../utils/constants.ts";
+import { APP_ID_HEAD } from "../utils/constants.ts";
 
 const auth = new Hono();
 
@@ -46,13 +44,20 @@ auth.post("/register", appIdMiddleware(), async (c) => {
       );
     }
     const appId = c.get(APP_ID_HEAD);
+    //TODO: can be problematic if user already registered in App A and and try to register in app B
 
     // Set default role based on appId
-    const roles = [appId];
-    const userId = await registerUser(email, password);
+    //const roles = [appId];
+    // Check if user already registered
+    // if yes store his informations in the app he wants to used
+    // if not register hiw with firebase and store in the app as well
+    // remove the roles as it increase complexity
+    // for login apply same logic
+
+    const userId = await registerUser(email, password, appId);
 
     // Store user with roles
-    await setUserData(email, { userId, roles });
+    //await setUserData(email, { userId, roles });
 
     return c.json({
       message: "User registered successfully!",
@@ -75,22 +80,13 @@ auth.post("/login", appIdMiddleware(), async (c) => {
       return c.json({ error: "Email, password required" }, 422);
     }
 
-    const userData = await getUserData(email);
+    const appId = c.get(APP_ID_HEAD);
+
+    const userData = await getUserData(email, appId);
     if (!userData.value) {
       return c.json({ error: "User not found" }, 404);
     }
-
-    // Verify user has access to this app
-
-    const userRoles = userData.value.roles || [];
-
-    if (!checkRoles(apps, userRoles)) {
-      return c.json(
-        { error: "Access to this application is not allowed" },
-        403,
-      );
-    }
-
+    
     const userCredential = await signInWithEmailAndPassword(
       fbAuth,
       email,

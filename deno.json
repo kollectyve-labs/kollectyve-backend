@@ -1,12 +1,16 @@
 {
-  "name": "@scope/signature-verifier",
+  "name": "kumulus-backend",
   "version": "0.1.0",
-  "exports": "./mod.ts",
   "imports": {
-    "@deno/kv-oauth": "jsr:@deno/kv-oauth@^0.11.0",
     "@firebase/app": "npm:@firebase/app@^0.10.18",
     "@firebase/auth": "npm:@firebase/auth@^1.8.2",
     "@hono/hono": "jsr:@hono/hono@^4.6.16",
-    "firebase-admin": "npm:firebase-admin@^13.1.0"
-  }
+    "@types/pg": "npm:@types/pg@^8.11.11",
+    "drizzle-kit": "npm:drizzle-kit@^0.30.5",
+    "drizzle-orm": "npm:drizzle-orm@^0.40.0",
+    "firebase-admin": "npm:firebase-admin@^13.1.0",
+    "pg": "npm:pg@^8.14.0",
+    "zod": "npm:zod@^3.24.2"
+  },
+  "nodeModulesDir": "auto"
 }

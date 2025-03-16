@@ -1,23 +1,69 @@
 <mxfile host="65bd71144e">
     <diagram id="pnUIoggER4j71EJg3G6K" name="Page-1">
-        <mxGraphModel dx="1002" dy="487" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="529" dy="303" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="5" value="FE Console" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="5" value="FE Console" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="160" y="180" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="7" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="430" y="90" width="120" height="280" as="geometry"/>
                 </mxCell>
-                <mxCell id="8" value="Auth" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="8" value="Auth" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="450" y="120" width="50" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="Verif" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="9" value="Verif" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="450" y="190" width="50" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="Verif" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="10" value="Verif" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="450" y="260" width="50" height="50" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="ETfjt-XTb5EIslEKlluT" name="Page-2">
+        <mxGraphModel dx="529" dy="303" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="lZ2gEz4J7WdfkJs8j6ao" name="Page-3">
+        <mxGraphModel dx="939" dy="407" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-1" value="Kollectyve Backend" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="105" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-2" value="Kumulus Provider" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="650" y="185" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-4" value="Actor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                    <mxGeometry x="250" y="110" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-5" value="Kumulus Provider" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="940" y="170" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-6" value="Kumulus Provider" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="850" y="105" width="50" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-9" value="" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="100" height="100" relative="1" as="geometry">
+                        <mxPoint x="650" y="139.5" as="sourcePoint"/>
+                        <mxPoint x="830" y="139.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-10" value="" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;" edge="1" parent="1">
+                    <mxGeometry width="100" height="100" relative="1" as="geometry">
+                        <mxPoint x="440" y="145" as="sourcePoint"/>
+                        <mxPoint x="530" y="144.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="SgyV-KO3TxqALtsHjcmL-14" value="Console" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="345" y="100" width="80" height="80" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

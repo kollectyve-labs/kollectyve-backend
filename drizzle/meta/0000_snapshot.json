@@ -1,0 +1,603 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.providers": {
+      "name": "providers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wallet_address": {
+          "name": "wallet_address",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 50
+        },
+        "last_lease_at": {
+          "name": "last_lease_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "providers_email_key": {
+          "columns": [
+            "email"
+          ],
+          "nullsNotDistinct": false,
+          "name": "providers_email_key"
+        },
+        "providers_wallet_address_key": {
+          "columns": [
+            "wallet_address"
+          ],
+          "nullsNotDistinct": false,
+          "name": "providers_wallet_address_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.provider_resources": {
+      "name": "provider_resources",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_cores": {
+          "name": "cpu_cores",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ram": {
+          "name": "ram",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage": {
+          "name": "storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bandwidth": {
+          "name": "bandwidth",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "provider_resources_provider_id_fkey": {
+          "name": "provider_resources_provider_id_fkey",
+          "tableFrom": "provider_resources",
+          "tableTo": "providers",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.health_checks": {
+      "name": "health_checks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_usage": {
+          "name": "cpu_usage",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "memory_free": {
+          "name": "memory_free",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "disk_free": {
+          "name": "disk_free",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "docker_status": {
+          "name": "docker_status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "running_containers": {
+          "name": "running_containers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unhealthy_containers": {
+          "name": "unhealthy_containers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp_unix": {
+          "name": "timestamp_unix",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timestamp_human": {
+          "name": "timestamp_human",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "health_checks_provider_id_fkey": {
+          "name": "health_checks_provider_id_fkey",
+          "tableFrom": "health_checks",
+          "tableTo": "providers",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.developers": {
+      "name": "developers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wallet_address": {
+          "name": "wallet_address",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "developers_email_key": {
+          "columns": [
+            "email"
+          ],
+          "nullsNotDistinct": false,
+          "name": "developers_email_key"
+        },
+        "developers_wallet_address_key": {
+          "columns": [
+            "wallet_address"
+          ],
+          "nullsNotDistinct": false,
+          "name": "developers_wallet_address_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.developer_vms": {
+      "name": "developer_vms",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "developer_id": {
+          "name": "developer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "container_id": {
+          "name": "container_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ram": {
+          "name": "ram",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_cores": {
+          "name": "cpu_cores",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage": {
+          "name": "storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'running'"
+        },
+        "ssh_public_key": {
+          "name": "ssh_public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "developer_vms_developer_id_fkey": {
+          "name": "developer_vms_developer_id_fkey",
+          "tableFrom": "developer_vms",
+          "tableTo": "developers",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "developer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "developer_vms_provider_id_fkey": {
+          "name": "developer_vms_provider_id_fkey",
+          "tableFrom": "developer_vms",
+          "tableTo": "providers",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "developer_vms_container_id_key": {
+          "columns": [
+            "container_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "developer_vms_container_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.developer_app_containers": {
+      "name": "developer_app_containers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "developer_id": {
+          "name": "developer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "container_id": {
+          "name": "container_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "app_name": {
+          "name": "app_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ram": {
+          "name": "ram",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_cores": {
+          "name": "cpu_cores",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage": {
+          "name": "storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'running'"
+        },
+        "ssh_public_key": {
+          "name": "ssh_public_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "developer_app_containers_developer_id_fkey": {
+          "name": "developer_app_containers_developer_id_fkey",
+          "tableFrom": "developer_app_containers",
+          "tableTo": "developers",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "developer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "developer_app_containers_provider_id_fkey": {
+          "name": "developer_app_containers_provider_id_fkey",
+          "tableFrom": "developer_app_containers",
+          "tableTo": "providers",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "developer_app_containers_container_id_key": {
+          "columns": [
+            "container_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "developer_app_containers_container_id_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}
