@@ -4,7 +4,7 @@ import "jsr:@std/dotenv/load";
 import { AppConfig } from "./models.ts";
 import { type User } from "@firebase/auth";
 import { APP_ID_HEAD } from "./constants.ts";
-import { fbAuth, getUserData } from "./db.ts";
+import { fbAuth, getUserData } from "./auth.ts";
 
 // App configurations
 const appConfigs = JSON.parse(Deno.env.get("APP_CONFIGS"));

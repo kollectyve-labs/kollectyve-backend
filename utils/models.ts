@@ -1,5 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
-// Type definitions for better type safety
 export interface UserData {
   userId: string;
   roles: string[];

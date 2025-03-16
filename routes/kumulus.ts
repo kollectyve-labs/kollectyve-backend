@@ -8,7 +8,7 @@ import {
   storeHealthstats,
   storeIpAddress,
   updateProvider,
-} from "../utils/db.ts";
+} from "../drizzle/db.ts";
 import { verifySignature } from "../utils/signature.ts";
 import { appIdMiddleware } from "../utils/auth-helpers.ts";
 import { APP_ID_HEAD } from "../utils/constants.ts";
