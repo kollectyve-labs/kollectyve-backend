@@ -72,13 +72,14 @@ export const developers = pgTable("developers", {
 export const developerVms = pgTable("developer_vms", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	developerId: uuid("developer_id").notNull(),
-	providerId: uuid("provider_id").notNull(),
+	providerResourceId: uuid("provider_resource_id").notNull(),
 	containerId: varchar("container_id", { length: 200 }).notNull(),
 	ram: integer().notNull(),
 	cpuCores: integer("cpu_cores").notNull(),
 	storage: integer().notNull(),
 	status: varchar({ length: 50 }).default('running').notNull(),
 	sshPublicKey: text("ssh_public_key").notNull(),
+	sshPort: integer("ssh_port").notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
 }, (table) => [
@@ -88,9 +89,9 @@ export const developerVms = pgTable("developer_vms", {
 			name: "developer_vms_developer_id_fkey"
 		}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.providerId],
-			foreignColumns: [providers.id],
-			name: "developer_vms_provider_id_fkey"
+			columns: [table.providerResourceId],
+			foreignColumns: [providerResources.id],
+			name: "developer_vms_provider_resource_id_fkey"
 		}).onDelete("cascade"),
 	unique("developer_vms_container_id_key").on(table.containerId),
 ]);
@@ -98,7 +99,7 @@ export const developerVms = pgTable("developer_vms", {
 export const developerAppContainers = pgTable("developer_app_containers", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	developerId: uuid("developer_id").notNull(),
-	providerId: uuid("provider_id").notNull(),
+	providerResourceId: uuid("provider_resource_id").notNull(),
 	containerId: varchar("container_id", { length: 200 }).notNull(),
 	appName: varchar("app_name", { length: 100 }).notNull(),
 	ram: integer().notNull(),
@@ -106,6 +107,7 @@ export const developerAppContainers = pgTable("developer_app_containers", {
 	storage: integer().notNull(),
 	status: varchar({ length: 50 }).default('running').notNull(),
 	sshPublicKey: text("ssh_public_key"),
+	port: integer().notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
 }, (table) => [
@@ -115,9 +117,9 @@ export const developerAppContainers = pgTable("developer_app_containers", {
 			name: "developer_app_containers_developer_id_fkey"
 		}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.providerId],
-			foreignColumns: [providers.id],
-			name: "developer_app_containers_provider_id_fkey"
+			columns: [table.providerResourceId],
+			foreignColumns: [providerResources.id],
+			name: "developer_app_containers_provider_resource_id_fkey"
 		}).onDelete("cascade"),
 	unique("developer_app_containers_container_id_key").on(table.containerId),
 ]);

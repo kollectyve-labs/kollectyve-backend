@@ -1,9 +1,5 @@
 export const APP_ID_HEAD: string = "appId";
 
+// App types array for  odoo, wordpress, libreoffice, nextcloud
 
-export enum ContainerType {
-  UBUNTU = "ubuntu",
-  WORDPRESS = "wordpress",
-  ODOO = "odoo",
-  LIBREOFFICE = "libreoffice",
-}
+export const APP_TYPES = ["odoo", "wordpress", "libreoffice", "nextcloud"];

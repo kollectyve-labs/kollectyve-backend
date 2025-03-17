@@ -12,12 +12,7 @@ import {
   handleFirebaseError,
 } from "../utils/auth-helpers.ts";
 import { FirebaseError } from "@firebase/app";
-import {
-  getUserData,
-  registerUser,
-  setUserData,
-  setWallet,
-} from "../utils/db.ts";
+
 import { APP_ID_HEAD } from "../utils/constants.ts";
 
 const auth = new Hono();
@@ -86,7 +81,7 @@ auth.post("/login", appIdMiddleware(), async (c) => {
     if (!userData.value) {
       return c.json({ error: "User not found" }, 404);
     }
-    
+
     const userCredential = await signInWithEmailAndPassword(
       fbAuth,
       email,

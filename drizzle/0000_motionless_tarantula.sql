@@ -55,13 +55,14 @@ CREATE TABLE "developers" (
 CREATE TABLE "developer_vms" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"developer_id" uuid NOT NULL,
-	"provider_id" uuid NOT NULL,
+	"provider_resource_id" uuid NOT NULL,
 	"container_id" varchar(200) NOT NULL,
 	"ram" integer NOT NULL,
 	"cpu_cores" integer NOT NULL,
 	"storage" integer NOT NULL,
 	"status" varchar(50) DEFAULT 'running' NOT NULL,
 	"ssh_public_key" text NOT NULL,
+	"ssh_port" integer NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "developer_vms_container_id_key" UNIQUE("container_id")
@@ -70,7 +71,7 @@ CREATE TABLE "developer_vms" (
 CREATE TABLE "developer_app_containers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"developer_id" uuid NOT NULL,
-	"provider_id" uuid NOT NULL,
+	"provider_resource_id" uuid NOT NULL,
 	"container_id" varchar(200) NOT NULL,
 	"app_name" varchar(100) NOT NULL,
 	"ram" integer NOT NULL,
@@ -78,6 +79,7 @@ CREATE TABLE "developer_app_containers" (
 	"storage" integer NOT NULL,
 	"status" varchar(50) DEFAULT 'running' NOT NULL,
 	"ssh_public_key" text,
+	"port" integer NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "developer_app_containers_container_id_key" UNIQUE("container_id")
@@ -86,7 +88,7 @@ CREATE TABLE "developer_app_containers" (
 ALTER TABLE "provider_resources" ADD CONSTRAINT "provider_resources_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "health_checks" ADD CONSTRAINT "health_checks_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "developer_vms" ADD CONSTRAINT "developer_vms_developer_id_fkey" FOREIGN KEY ("developer_id") REFERENCES "public"."developers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "developer_vms" ADD CONSTRAINT "developer_vms_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "developer_vms" ADD CONSTRAINT "developer_vms_provider_resource_id_fkey" FOREIGN KEY ("provider_resource_id") REFERENCES "public"."provider_resources"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "developer_app_containers" ADD CONSTRAINT "developer_app_containers_developer_id_fkey" FOREIGN KEY ("developer_id") REFERENCES "public"."developers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "developer_app_containers" ADD CONSTRAINT "developer_app_containers_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "developer_app_containers" ADD CONSTRAINT "developer_app_containers_provider_resource_id_fkey" FOREIGN KEY ("provider_resource_id") REFERENCES "public"."provider_resources"("id") ON DELETE cascade ON UPDATE no action;
 */

@@ -356,8 +356,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "provider_id": {
-          "name": "provider_id",
+        "provider_resource_id": {
+          "name": "provider_resource_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -399,6 +399,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "ssh_port": {
+          "name": "ssh_port",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -430,13 +436,13 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "developer_vms_provider_id_fkey": {
-          "name": "developer_vms_provider_id_fkey",
+        "developer_vms_provider_resource_id_fkey": {
+          "name": "developer_vms_provider_resource_id_fkey",
           "tableFrom": "developer_vms",
-          "tableTo": "providers",
+          "tableTo": "provider_resources",
           "schemaTo": "public",
           "columnsFrom": [
-            "provider_id"
+            "provider_resource_id"
           ],
           "columnsTo": [
             "id"
@@ -476,8 +482,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "provider_id": {
-          "name": "provider_id",
+        "provider_resource_id": {
+          "name": "provider_resource_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -525,6 +531,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "port": {
+          "name": "port",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -556,13 +568,13 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "developer_app_containers_provider_id_fkey": {
-          "name": "developer_app_containers_provider_id_fkey",
+        "developer_app_containers_provider_resource_id_fkey": {
+          "name": "developer_app_containers_provider_resource_id_fkey",
           "tableFrom": "developer_app_containers",
-          "tableTo": "providers",
+          "tableTo": "provider_resources",
           "schemaTo": "public",
           "columnsFrom": [
-            "provider_id"
+            "provider_resource_id"
           ],
           "columnsTo": [
             "id"

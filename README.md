@@ -1,13 +1,12 @@
-# kumulus-conductor
+# Kollectyve Backend
 
-Kumulus Cloud and Relai orchestration codebase
-
-## Pulling a postgres database via Drizzle
+### Pulling a postgres database via Drizzle
 
 ```bash
 ### Pull
 deno --env -A --node-modules-dir npm:drizzle-kit pull
 ```
+
 ## Running the app
 
 With Postgres as a database
@@ -16,14 +15,8 @@ With Postgres as a database
 deno run --env -A app.ts
 ```
 
-With Deno KV (locally Deno KV need the `--unstable-kv` flag)
-
-```bash
-deno run -A app.ts
-```
-
 ## Testing local agent
 
 ```bash
-deno run -A --unstable-cron local_agent/main.ts
+deno run  --allow-env --allow-read --allow-net --unstable-cron --allow-run --allow-write local_agent/main.ts
 ```
