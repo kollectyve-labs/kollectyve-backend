@@ -465,8 +465,8 @@
       "policies": {},
       "isRLSEnabled": false
     },
-    "public.developer_app_containers": {
-      "name": "developer_app_containers",
+    "public.app_deployments": {
+      "name": "app_deployments",
       "schema": "",
       "columns": {
         "id": {
@@ -488,51 +488,35 @@
           "primaryKey": false,
           "notNull": true
         },
-        "container_id": {
-          "name": "container_id",
-          "type": "varchar(200)",
+        "app_type": {
+          "name": "app_type",
+          "type": "app_type",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "app_name": {
-          "name": "app_name",
+        "network_name": {
+          "name": "network_name",
           "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ram": {
-          "name": "ram",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "cpu_cores": {
-          "name": "cpu_cores",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "storage": {
-          "name": "storage",
-          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "status": {
           "name": "status",
-          "type": "varchar(50)",
+          "type": "deployment_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'running'"
+          "default": "'creating'"
         },
-        "ssh_public_key": {
-          "name": "ssh_public_key",
-          "type": "text",
+        "total_cpu": {
+          "name": "total_cpu",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "port": {
-          "name": "port",
+        "total_memory": {
+          "name": "total_memory",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -541,22 +525,71 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_deployment_developer": {
+          "name": "idx_deployment_developer",
+          "columns": [
+            {
+              "expression": "developer_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "uuid_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_deployment_provider": {
+          "name": "idx_deployment_provider",
+          "columns": [
+            {
+              "expression": "provider_resource_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "uuid_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_deployment_status": {
+          "name": "idx_deployment_status",
+          "columns": [
+            {
+              "expression": "status",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "enum_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
-        "developer_app_containers_developer_id_fkey": {
-          "name": "developer_app_containers_developer_id_fkey",
-          "tableFrom": "developer_app_containers",
+        "app_deployments_developer_id_fkey": {
+          "name": "app_deployments_developer_id_fkey",
+          "tableFrom": "app_deployments",
           "tableTo": "developers",
           "schemaTo": "public",
           "columnsFrom": [
@@ -568,13 +601,175 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "developer_app_containers_provider_resource_id_fkey": {
-          "name": "developer_app_containers_provider_resource_id_fkey",
-          "tableFrom": "developer_app_containers",
+        "app_deployments_provider_resource_id_fkey": {
+          "name": "app_deployments_provider_resource_id_fkey",
+          "tableFrom": "app_deployments",
           "tableTo": "provider_resources",
           "schemaTo": "public",
           "columnsFrom": [
             "provider_resource_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.deployment_containers": {
+      "name": "deployment_containers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "deployment_id": {
+          "name": "deployment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "container_id": {
+          "name": "container_id",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "container_type": {
+          "name": "container_type",
+          "type": "container_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cpu_cores": {
+          "name": "cpu_cores",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ram": {
+          "name": "ram",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage": {
+          "name": "storage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "port": {
+          "name": "port",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "internal_port": {
+          "name": "internal_port",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'creating'"
+        },
+        "environment_vars": {
+          "name": "environment_vars",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "volumes": {
+          "name": "volumes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_container_deployment": {
+          "name": "idx_container_deployment",
+          "columns": [
+            {
+              "expression": "deployment_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "uuid_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_container_status": {
+          "name": "idx_container_status",
+          "columns": [
+            {
+              "expression": "status",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "text_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "deployment_containers_deployment_id_fkey": {
+          "name": "deployment_containers_deployment_id_fkey",
+          "tableFrom": "deployment_containers",
+          "tableTo": "app_deployments",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "deployment_id"
           ],
           "columnsTo": [
             "id"
@@ -585,12 +780,12 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "developer_app_containers_container_id_key": {
+        "deployment_containers_container_id_key": {
           "columns": [
             "container_id"
           ],
           "nullsNotDistinct": false,
-          "name": "developer_app_containers_container_id_key"
+          "name": "deployment_containers_container_id_key"
         }
       },
       "checkConstraints": {},
@@ -598,12 +793,98 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.app_type": {
+      "name": "app_type",
+      "values": [
+        "odoo",
+        "wordpress",
+        "libreoffice",
+        "nextcloud"
+      ],
+      "schema": "public"
+    },
+    "public.container_type": {
+      "name": "container_type",
+      "values": [
+        "main",
+        "database",
+        "cache",
+        "proxy"
+      ],
+      "schema": "public"
+    },
+    "public.deployment_status": {
+      "name": "deployment_status",
+      "values": [
+        "creating",
+        "running",
+        "stopped",
+        "failed",
+        "deleted"
+      ],
+      "schema": "public"
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
+  "views": {
+    "public.deployment_overview": {
+      "name": "deployment_overview",
+      "schema": "public",
+      "columns": {
+        "deployment_id": {
+          "name": "deployment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "app_type": {
+          "name": "app_type",
+          "type": "app_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deployment_status": {
+          "name": "deployment_status",
+          "type": "deployment_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "network_name": {
+          "name": "network_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_cpu": {
+          "name": "total_cpu",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_memory": {
+          "name": "total_memory",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "containers": {
+          "name": "containers",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "isExisting": false,
+      "definition": "SELECT d.id AS deployment_id, d.app_type, d.status AS deployment_status, d.network_name, d.total_cpu, d.total_memory, json_agg(json_build_object('container_id', c.container_id, 'container_type', c.container_type, 'status', c.status, 'port', c.port)) AS containers FROM app_deployments d LEFT JOIN deployment_containers c ON d.id = c.deployment_id GROUP BY d.id",
+      "materialized": false
+    }
+  },
   "_meta": {
     "schemas": {},
     "tables": {},

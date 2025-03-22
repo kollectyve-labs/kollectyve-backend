@@ -1,5 +1,4 @@
-import { app } from "./provisoner.ts";
-import { cleanupUnusedResources } from "./provisoner.ts";
+import { app } from "./provisioner.ts";
 
 Deno.serve({ port: 8800, hostname: "0.0.0.0" }, app.fetch);
 

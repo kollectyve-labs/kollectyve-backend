@@ -1,19 +1,14 @@
 import { Hono } from "@hono/hono";
-import {
-  getProviders,
-  getProviderByBestScoreAndLastLeaseTime,
-  insertDeveloperVm,
-  getDeveloperVmsByDeveloperId,
-  updateVmStatus,
-  updateAppStatus,
-  deleteVmRecord,
-  deleteAppRecord,
-  insertAppContainer,
-  getContainerIpAddressAndPort,
-  getVmIpAddressAndPort
-} from "../drizzle/db.ts";
+import { updateVmStatus, insertDeveloperVm, getDeveloperVmByContainerId } from "../database/kumulus/vms.ts";
+import { insertAppDeployment, 
+  getAppDeploymentById, 
+  insertDeploymentContainers, 
+  updateDeploymentContainersStatus } 
+  from "../database/kumulus/app-deployments.ts";
 import { z } from "npm:zod";
 import { APP_TYPES } from "../utils/constants.ts";
+import { db } from "../database/db.ts";
+import { deploymentContainers } from "../drizzle/schema.ts";
 
 // Request/Response Types
 interface CreateVMRequest {
@@ -34,6 +29,10 @@ interface CreateAppRequest {
 interface ContainerControlRequest {
   containerId: string;
   type: 'vm' | 'app';
+}
+
+interface DeploymentControlRequest {
+  deploymentId: string;
 }
 
 // Validation Schemas
@@ -57,15 +56,13 @@ const containerControlSchema = z.object({
   type: z.enum(['vm', 'app'])
 });
 
+const deploymentControlSchema = z.object({
+  deploymentId: z.string().min(1)
+});
+
 const kumulusdevs = new Hono();
 
 kumulusdevs.get("/", (c) => c.text("Kumulus Devs !"));
-
-// Get all providers
-kumulusdevs.get("/providers", async (c) => {
-  const providers = await getProviders();
-  return c.json(providers);
-});
 
 // Create Ubuntu VM
 kumulusdevs.post("/create-vm", async (c) => {
@@ -105,7 +102,6 @@ kumulusdevs.post("/create-vm", async (c) => {
         status: data.status,
         sshPublicKey: validatedData.sshKey,
         sshPort: data.sshPort
-
       });
     }
 
@@ -118,6 +114,122 @@ kumulusdevs.post("/create-vm", async (c) => {
   }
 });
 
+// Start VM by containerId
+kumulusdevs.post("/start-vm", async (c) => {
+  try {
+    const body = await c.req.json();
+    const vmId = body.vmId;
+
+    // Check VM status in database first
+    const vm = await getDeveloperVmByContainerId(vmId);
+    if (!vm) {
+      return c.json({ error: "VM not found" }, 404);
+    }
+    if (vm.status === "deleted") {
+      return c.json({ error: "Cannot start a deleted VM" }, 400);
+    }
+    if (vm.status === "running") {
+      return c.json({ error: "VM is already running" }, 400);
+    }
+
+    const response = await fetch("http://localhost:8800/start-vm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vmId }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      await updateVmStatus(vmId, "running");
+      return c.json(data, response.status);
+    } else if (response.status === 404) {
+      // If VM not found, update status to deleted
+      await updateVmStatus(vmId, "deleted");
+      return c.json(data, response.status);
+    } else {
+      return c.json(data, response.status);
+    }
+  } catch (error) {
+    return c.json({ error: "Internal server error", message: error.message }, 500);
+  }
+});
+
+// Stop VM by containerId
+kumulusdevs.post("/stop-vm", async (c) => {
+  try {
+    const body = await c.req.json();
+    const vmId = body.vmId;
+
+    // Check VM status in database first
+    const vm = await getDeveloperVmByContainerId(vmId);
+    if (!vm) {
+      return c.json({ error: "VM not found" }, 404);
+    }
+    if (vm.status === "deleted") {
+      return c.json({ error: "Cannot stop a deleted VM" }, 400);
+    }
+    if (vm.status === "stopped") {
+      return c.json({ error: "VM is already stopped" }, 400);
+    }
+
+    const response = await fetch("http://localhost:8800/stop-vm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vmId }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      await updateVmStatus(vmId, "stopped");
+      return c.json(data, response.status);
+    } else if (response.status === 404) {
+      // If VM not found, update status to deleted
+      await updateVmStatus(vmId, "deleted");
+      return c.json(data, response.status);
+    } else {
+      return c.json(data, response.status);
+    }
+  } catch (error) {
+    return c.json({ error: "Internal server error", message: error.message }, 500);
+  }
+});
+
+// Delete VM by containerId
+kumulusdevs.post("/delete-vm", async (c) => {
+  try {
+    const body = await c.req.json();
+    const vmId = body.vmId;
+
+    // Check VM status in database first
+    const vm = await getDeveloperVmByContainerId(vmId);
+    if (!vm) {
+      return c.json({ error: "VM not found" }, 404);
+    }
+    if (vm.status === "deleted") {
+      return c.json({ error: "VM is already deleted" }, 400);
+    }
+
+    const response = await fetch("http://localhost:8800/delete-vm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vmId }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok || response.status === 404) {
+      // Update status to deleted regardless of whether the container exists
+      await updateVmStatus(vmId, "deleted");
+      return c.json(data, response.status);
+    } else {
+      return c.json(data, response.status);
+    }
+  } catch (error) {
+    return c.json({ error: "Internal server error", message: error.message }, 500);
+  }
+});
 
 // Create App Container
 kumulusdevs.post("/create-app", async (c) => {
@@ -125,44 +237,62 @@ kumulusdevs.post("/create-app", async (c) => {
     const body = await c.req.json();
     const validatedData = createAppSchema.parse(body);
 
-   // const provider = await getProviderByBestScoreAndLastLeaseTime();
+    // Generate a deploymentId if not provided
+    const deploymentId = crypto.randomUUID();
 
-   const provider = "Provider1";
-    if (!provider) {
-      return c.json({ error: "No provider found" }, 404);
-    }
+    const provisionerRequest = {
+      type: validatedData.appType,
+      cpu: validatedData.cpu,
+      memory: validatedData.memory,
+      deploymentId: deploymentId
+    };
 
+    // Call provisioner to create app
     const response = await fetch("http://localhost:8800/create-app", {
-    //const response = await fetch(`${provider.ip}/create-app`, {
-
-      method: "POST",
+      method: "POST", 
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: validatedData.appType,
-        cpu: validatedData.cpu,
-        memory: validatedData.memory
-      }),
+      body: JSON.stringify(provisionerRequest),
     });
 
     const data = await response.json();
 
     if (response.ok) {
       console.log("[LOG] App creation response:", data);
-      await insertAppContainer({
+      // Insert App Deployment
+      await insertAppDeployment({
+        id: deploymentId,
         developerId: "42115ec2-376a-489c-8300-94984aba72fa",
         providerResourceId: "a6ae7e2f-e89a-4477-b3ac-ea4607c4599f",
-        containerId: data.id,
-        appName: validatedData.appType,
-        ram: parseInt(validatedData.memory),
-        cpuCores: validatedData.cpu,
-        storage: 1024,
-        status: data.status,
-        port: data.port,
+        appType: validatedData.appType, 
+        networkName: `${deploymentId}-network`,
+        totalCpu: validatedData.cpu,
+        totalMemory: parseInt(validatedData.memory),
+        status: 'creating'
       });
+
+      // Insert Container Records
+      for (const container of data.containers) {
+        await insertDeploymentContainers({
+          deploymentId: deploymentId,
+          containerId: container.id,
+          containerType: container.type,
+          name: container.id,
+          image: container.type,
+          cpuCores: container.type === 'main' ? validatedData.cpu : 1,
+          ram: parseInt(validatedData.memory),  
+          storage: 12,
+          port: container.port,
+          status: container.status
+        });
+      }
+
+      // Update Deployment Status
+      await updateDeploymentContainersStatus(deploymentId, 'running');
     }
 
     return c.json(data, response.status);
   } catch (error) {
+    console.error("[ERROR] Create app failed:", error);
     if (error instanceof z.ZodError) {
       return c.json({ error: "Validation error", details: error.errors }, 400);
     }
@@ -170,121 +300,29 @@ kumulusdevs.post("/create-app", async (c) => {
   }
 });
 
-// Start Container
-kumulusdevs.post("/start-container", async (c) => {
-  
-});
-
-// Stop Container by Container ID 
-kumulusdevs.post("/stop-container", async (c) => {
+// Start Deployment
+kumulusdevs.post("/start-app", async (c) => {
   try {
     const body = await c.req.json();
-    const validatedData = containerControlSchema.parse(body);
+    const validatedData = deploymentControlSchema.parse(body);
 
-    console.log("[LOG] Request body:", body);
-    console.log("[LOG] Validated data:", validatedData);
-
-    // Get container details based on type
-    /*let containerDetails;
-    try {
-      if (validatedData.type === 'vm') {
-        containerDetails = await getVmIpAddressAndPort(validatedData.containerId);
-        console.log("[LOG] VM details:", containerDetails);
-      } else {
-        containerDetails = await getContainerIpAddressAndPort(validatedData.containerId);
-        console.log("[LOG] Container details:", containerDetails);
-      }
-    } catch (dbError) {
-      console.error("[ERROR] Database query failed:", dbError);
-      return c.json({ 
-        error: "Database query failed", 
-        message: dbError.message 
-      }, 500);
-    }
-
-    if (!containerDetails) {
-      return c.json({ 
-        error: "Container not found", 
-        containerId: validatedData.containerId,
-        type: validatedData.type
-      }, 404);
-    }
-*/
-    // Call provisioner to stop the container
-    const response = await fetch("http://localhost:8800/stop-container", {
+    // Call provisioner to start deployment
+    const response = await fetch("http://localhost:8800/start-deployment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        id: validatedData.containerId 
-      }),
+      body: JSON.stringify({ deploymentId: validatedData.deploymentId }),
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      try {
-        await updateContainerStatus(
-          validatedData.containerId,
-          validatedData.type,
-          "stopped"
-        );
-      } catch (updateError) {
-        console.error("[ERROR] Failed to update container status:", updateError);
-      }
-
-      return c.json({ 
-        message: `${validatedData.type === 'vm' ? 'VM' : 'App'} stopped successfully`,
-        containerId: validatedData.containerId,
-        status: "stopped",
-        ...data
-      });
+      // Update Deployment Status
+      await updateDeploymentContainersStatus(validatedData.deploymentId, 'running');
     }
 
     return c.json(data, response.status);
   } catch (error) {
-    console.error("[ERROR] Stop container failed:", error);
-    if (error instanceof z.ZodError) {
-      return c.json({ 
-        error: "Validation error", 
-        details: error.errors 
-      }, 400);
-    }
-    return c.json({ 
-      error: "Internal server error", 
-      message: error.message 
-    }, 500);
-  }
-});
-
-// Delete Container
-kumulusdevs.post("/delete-container", async (c) => {
-  try {
-    const body = await c.req.json();
-    const validatedData = containerControlSchema.parse(body);
-
-    const provider = await getProviderByBestScoreAndLastLeaseTime();
-    if (!provider) {
-      return c.json({ error: "No provider found" }, 404);
-    }
-
-    const response = await fetch(`${provider.ip}/delete-container`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: validatedData.containerId }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      if (validatedData.type === 'vm') {
-        await deleteVmRecord(validatedData.containerId);
-      } else {
-        await deleteAppRecord(validatedData.containerId);
-      }
-    }
-
-    return c.json(data, response.status);
-  } catch (error) {
+    console.error("[ERROR] Start deployment failed:", error);
     if (error instanceof z.ZodError) {
       return c.json({ error: "Validation error", details: error.errors }, 400);
     }
@@ -292,36 +330,66 @@ kumulusdevs.post("/delete-container", async (c) => {
   }
 });
 
-// List Containers
-kumulusdevs.get("/containers", async (c) => {
+// Stop Deployment
+kumulusdevs.post("/stop-app", async (c) => {
   try {
-    const provider = await getProviderByBestScoreAndLastLeaseTime();
-    if (!provider) {
-      return c.json({ error: "No provider found" }, 404);
-    }
+    const body = await c.req.json();
+    const validatedData = deploymentControlSchema.parse(body);
 
-    const response = await fetch(`${provider.ip}/containers`, {
-      method: "GET",
+ 
+    // Call provisioner to stop deployment
+    const response = await fetch("http://localhost:8800/stop-deployment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deploymentId: validatedData.deploymentId }),
     });
 
     const data = await response.json();
+
+    if (response.ok) {
+      // Update Deployment Status
+      await updateDeploymentContainersStatus(validatedData.deploymentId, 'stopped');
+    }
+
     return c.json(data, response.status);
   } catch (error) {
+    console.error("[ERROR] Stop deployment failed:", error);
+    if (error instanceof z.ZodError) {
+      return c.json({ error: "Validation error", details: error.errors }, 400);
+    }
     return c.json({ error: "Internal server error", message: error.message }, 500);
   }
 });
 
-// Helper function to update container status
-async function updateContainerStatus(
-  containerId: string,
-  type: 'vm' | 'app',
-  status: string
-) {
-  if (type === 'vm') {
-    await updateVmStatus(containerId, status);
-  } else {
-    await updateAppStatus(containerId, status);
+// Delete Deployment
+kumulusdevs.post("/delete-app", async (c) => {
+  try {
+    const body = await c.req.json();
+    const validatedData = deploymentControlSchema.parse(body);
+
+    // Call provisioner to delete deployment
+    const response = await fetch("http://localhost:8800/delete-deployment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deploymentId: validatedData.deploymentId }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Update Deployment Status
+      await updateDeploymentContainersStatus(validatedData.deploymentId, 'deleted');
+    }
+
+    return c.json(data, response.status);
+  } catch (error) {
+    console.error("[ERROR] Delete deployment failed:", error);
+    if (error instanceof z.ZodError) {
+      return c.json({ error: "Validation error", details: error.errors }, 400);
+    }
+    return c.json({ error: "Internal server error", message: error.message }, 500);
   }
-}
+});
+
 
 export { kumulusdevs };

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { providers, providerResources, healthChecks, developers, developerVms, developerAppContainers } from "./schema.ts";
+import { providers, providerResources, healthChecks, developers, developerVms, appDeployments, deploymentContainers } from "./schema";
 
 export const providerResourcesRelations = relations(providerResources, ({one, many}) => ({
 	provider: one(providers, {
@@ -7,7 +7,7 @@ export const providerResourcesRelations = relations(providerResources, ({one, ma
 		references: [providers.id]
 	}),
 	developerVms: many(developerVms),
-	developerAppContainers: many(developerAppContainers),
+	appDeployments: many(appDeployments),
 }));
 
 export const providersRelations = relations(providers, ({many}) => ({
@@ -35,16 +35,24 @@ export const developerVmsRelations = relations(developerVms, ({one}) => ({
 
 export const developersRelations = relations(developers, ({many}) => ({
 	developerVms: many(developerVms),
-	developerAppContainers: many(developerAppContainers),
+	appDeployments: many(appDeployments),
 }));
 
-export const developerAppContainersRelations = relations(developerAppContainers, ({one}) => ({
+export const appDeploymentsRelations = relations(appDeployments, ({one, many}) => ({
 	developer: one(developers, {
-		fields: [developerAppContainers.developerId],
+		fields: [appDeployments.developerId],
 		references: [developers.id]
 	}),
 	providerResource: one(providerResources, {
-		fields: [developerAppContainers.providerResourceId],
+		fields: [appDeployments.providerResourceId],
 		references: [providerResources.id]
+	}),
+	deploymentContainers: many(deploymentContainers),
+}));
+
+export const deploymentContainersRelations = relations(deploymentContainers, ({one}) => ({
+	appDeployment: one(appDeployments, {
+		fields: [deploymentContainers.deploymentId],
+		references: [appDeployments.id]
 	}),
 }));
