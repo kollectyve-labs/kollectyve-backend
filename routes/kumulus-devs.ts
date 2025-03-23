@@ -1,14 +1,13 @@
 import { Hono } from "@hono/hono";
 import { updateVmStatus, insertDeveloperVm, getDeveloperVmByContainerId } from "../database/kumulus/vms.ts";
-import { insertAppDeployment, 
-  getAppDeploymentById, 
+import { 
+  insertAppDeployment, 
   insertDeploymentContainers, 
   updateDeploymentContainersStatus } 
   from "../database/kumulus/app-deployments.ts";
 import { z } from "npm:zod";
 import { APP_TYPES } from "../utils/constants.ts";
-import { db } from "../database/db.ts";
-import { deploymentContainers } from "../drizzle/schema.ts";
+import { selectProvider } from "../database/kumulus/providers.ts";
 
 // Request/Response Types
 interface CreateVMRequest {
@@ -64,18 +63,25 @@ const kumulusdevs = new Hono();
 
 kumulusdevs.get("/", (c) => c.text("Kumulus Devs !"));
 
+// Test Provider Selection Algorithm
+kumulusdevs.get("/test-provider", async (c) => {
+  const provider = await selectProvider();
+  return c.json(provider);
+});
+
 // Create Ubuntu VM
 kumulusdevs.post("/create-vm", async (c) => {
   try {
     const body = await c.req.json();
     const validatedData = createVMSchema.parse(body);
 
-    /*
-    const provider = await getProviderByBestScoreAndLastLeaseTime();
+    const provider = await selectProvider();
     if (!provider) {
-      return c.json({ error: "No provider found" }, 404);
+      return c.json({ error: "No provider available with capacity" }, 503);
+    } else {
+      console.log("[LOG] Provider selected:", provider);
     }
-    */
+    
     // const response = await fetch(`${provider.ip}/create-vm`, {
     const response = await fetch("http://localhost:8800/create-vm", {
 
@@ -237,6 +243,13 @@ kumulusdevs.post("/create-app", async (c) => {
     const body = await c.req.json();
     const validatedData = createAppSchema.parse(body);
 
+    const provider = await selectProvider();
+    if (!provider) {
+      return c.json({ error: "No provider available with capacity" }, 503);
+    } else {
+      console.log("[LOG] Provider selected:", provider);
+    }
+
     // Generate a deploymentId if not provided
     const deploymentId = crypto.randomUUID();
 
@@ -262,7 +275,7 @@ kumulusdevs.post("/create-app", async (c) => {
       await insertAppDeployment({
         id: deploymentId,
         developerId: "42115ec2-376a-489c-8300-94984aba72fa",
-        providerResourceId: "a6ae7e2f-e89a-4477-b3ac-ea4607c4599f",
+        providerResourceId: provider.resourceId,
         appType: validatedData.appType, 
         networkName: `${deploymentId}-network`,
         totalCpu: validatedData.cpu,
@@ -390,6 +403,5 @@ kumulusdevs.post("/delete-app", async (c) => {
     return c.json({ error: "Internal server error", message: error.message }, 500);
   }
 });
-
 
 export { kumulusdevs };

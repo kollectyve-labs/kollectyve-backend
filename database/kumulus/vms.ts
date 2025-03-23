@@ -1,6 +1,4 @@
-import {
-  developerVms as vmSchema,
-} from "../../drizzle/schema.ts";
+import { developerVms as vmSchema } from "../../drizzle/schema.ts";
 import { db } from "../db.ts";
 import { eq } from "drizzle-orm/expressions";
 
@@ -23,7 +21,5 @@ export async function updateVmStatus(containerId: string, status: string) {
 export async function getDeveloperVmByContainerId(containerId: string) {
   return await db.query.vmSchema.findFirst({
     where: eq(vmSchema.containerId, containerId),
-  } );
+  });
 }
-
-

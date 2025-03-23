@@ -1,13 +1,13 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 const { Pool } = pg;
-import { 
-  providers as providersSchema, 
-  developerVms as vmSchema, 
-  providerResources as ProviderResourcesSchema, 
+import {
   appDeployments as appDeploymentsSchema,
-  deploymentContainers as deploymentContainersSchema
-} from "../drizzle/schema.ts";  
+  deploymentContainers as deploymentContainersSchema,
+  developerVms as vmSchema,
+  providerResources as ProviderResourcesSchema,
+  providers as providersSchema,
+} from "../drizzle/schema.ts";
 
 class Database {
   private static instance: Database;
@@ -19,7 +19,13 @@ class Database {
     });
 
     this.db = drizzle(pool, {
-        schema: { providersSchema, vmSchema, appDeploymentsSchema, ProviderResourcesSchema, deploymentContainersSchema },
+      schema: {
+        providersSchema,
+        vmSchema,
+        appDeploymentsSchema,
+        ProviderResourcesSchema,
+        deploymentContainersSchema,
+      },
     });
   }
 

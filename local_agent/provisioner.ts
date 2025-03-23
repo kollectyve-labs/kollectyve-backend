@@ -269,28 +269,28 @@ app.post("/stop-vm", async (c) => {
   try {
     const body: VMControlRequest = await c.req.json();
     console.log(`[LOG] Received VM stop request for : ${body.vmId}`);
-    
+
     // Check if container exists
     const exists = await containerExists(body.vmId);
     if (!exists) {
       return c.json({
         error: "VM not found",
-        details: `Container ${body.vmId} does not exist`
+        details: `Container ${body.vmId} does not exist`,
       }, 404);
     }
-    
+
     const stopResult = await runCommand("docker", ["stop", body.vmId]);
-    
+
     if (stopResult.code !== 0) {
       console.error(`[ERROR] Docker stop failed`);
       console.error(`[ERROR] Stop stderr: ${stopResult.stderr}`);
       console.error(`[ERROR] Stop stdout: ${stopResult.stdout}`);
       return c.json({
         error: "Failed to stop VM",
-        details: stopResult.stderr
+        details: stopResult.stderr,
       }, 500);
-    } 
-    
+    }
+
     return c.json({
       message: "VM stopped successfully",
     }, 200);
@@ -305,29 +305,29 @@ app.post("/start-vm", async (c) => {
   try {
     const body: VMControlRequest = await c.req.json();
     console.log(`[LOG] Received VM start request for : ${body.vmId}`);
-    
+
     // Check if container exists
     const exists = await containerExists(body.vmId);
     if (!exists) {
       return c.json({
         error: "VM not found",
-        details: `Container ${body.vmId} does not exist`
+        details: `Container ${body.vmId} does not exist`,
       }, 404);
     }
-    
+
     const startResult = await runCommand("docker", ["start", body.vmId]);
-    
-    if (startResult.code !== 0) { 
+
+    if (startResult.code !== 0) {
       console.error(`[ERROR] Docker start failed`);
       console.error(`[ERROR] Start stderr: ${startResult.stderr}`);
       console.error(`[ERROR] Start stdout: ${startResult.stdout}`);
       return c.json({
         error: "Failed to start VM",
-        details: startResult.stderr
+        details: startResult.stderr,
       }, 500);
     }
-    
-    return c.json({ 
+
+    return c.json({
       message: "VM started successfully",
     }, 200);
   } catch (error) {
@@ -341,28 +341,28 @@ app.post("/delete-vm", async (c) => {
   try {
     const body: VMControlRequest = await c.req.json();
     console.log(`[LOG] Received VM delete request for : ${body.vmId}`);
-    
+
     // Check if container exists
     const exists = await containerExists(body.vmId);
     if (!exists) {
       return c.json({
         error: "VM not found",
-        details: `Container ${body.vmId} does not exist`
+        details: `Container ${body.vmId} does not exist`,
       }, 404);
     }
-    
+
     const deleteResult = await runCommand("docker", ["rm", "-f", body.vmId]);
-    
+
     if (deleteResult.code !== 0) {
       console.error(`[ERROR] Docker delete failed`);
       console.error(`[ERROR] Delete stderr: ${deleteResult.stderr}`);
       console.error(`[ERROR] Delete stdout: ${deleteResult.stdout}`);
       return c.json({
         error: "Failed to delete VM",
-        details: deleteResult.stderr
+        details: deleteResult.stderr,
       }, 500);
-    } 
-    
+    }
+
     return c.json({
       message: "VM deleted successfully",
     }, 200);
@@ -427,14 +427,14 @@ const APP_CONFIGS: Record<string, AppConfig> = {
       WORDPRESS_DB_USER: "wordpress",
       WORDPRESS_DB_PASSWORD: "wordpress",
       WORDPRESS_DB_NAME: "wordpress",
-      WORDPRESS_TABLE_PREFIX: "wp_"
+      WORDPRESS_TABLE_PREFIX: "wp_",
     },
     dbEnvVars: {
       MYSQL_DATABASE: "wordpress",
       MYSQL_USER: "wordpress",
       MYSQL_PASSWORD: "wordpress",
       MYSQL_ROOT_PASSWORD: "somewordpress",
-      MYSQL_INITDB_SKIP_TZINFO: "1" // Speed up initialization
+      MYSQL_INITDB_SKIP_TZINFO: "1", // Speed up initialization
     },
     main: {
       cpu: 1,
@@ -443,7 +443,7 @@ const APP_CONFIGS: Record<string, AppConfig> = {
     database: {
       cpu: 1,
       memory: "512m",
-    }
+    },
   },
   libreoffice: {
     image: "collabora/code:latest",
@@ -491,22 +491,21 @@ const APP_CONFIGS: Record<string, AppConfig> = {
   },
 } as const;
 
-
 // Create AppDeployment function
 async function createAppDeployment(
   deploymentId: string,
   appType: string,
   networkName: string,
-  config: AppConfig
-): Promise<{containers: any[]}> {
+  config: AppConfig,
+): Promise<{ containers: any[] }> {
   try {
     console.log(`[LOG] Creating deployment ${deploymentId}`);
-    
+
     // Create network
     const networkResult = await runCommand("docker", [
       "network",
       "create",
-      networkName
+      networkName,
     ]);
 
     if (networkResult.code !== 0) {
@@ -519,7 +518,7 @@ async function createAppDeployment(
     if (config.requiresDB && config.dbImage) {
       const dbContainerId = `${deploymentId}-db`;
       console.log(`[LOG] Starting database container ${dbContainerId}`);
-      
+
       const dbResult = await runCommand("docker", [
         "run",
         "-d",
@@ -529,29 +528,38 @@ async function createAppDeployment(
         "db",
         "--name",
         dbContainerId,
-        ...Object.entries(config.dbEnvVars || {}).flatMap(([k, v]) => ["-e", `${k}=${v}`]),
+        ...Object.entries(config.dbEnvVars || {}).flatMap((
+          [k, v],
+        ) => ["-e", `${k}=${v}`]),
         `--cpus=${config.database?.cpu || 1}`,
         `--memory=${config.database?.memory || "512m"}`,
-        config.dbImage
+        config.dbImage,
       ]);
 
       if (dbResult.code !== 0) {
-        throw new Error(`Failed to start database container: ${dbResult.stderr}`);
+        throw new Error(
+          `Failed to start database container: ${dbResult.stderr}`,
+        );
       }
 
       containers.push({
         id: dbContainerId,
-        type: 'database',
-        port: null
+        type: "database",
+        port: null,
       });
     }
 
     // Start main application container
     const mainContainerId = `${deploymentId}-main`;
-    const mainPort = await findFreePort(PORT_RANGES[appType].start, PORT_RANGES[appType].end);
-    
-    console.log(`[LOG] Starting main container ${mainContainerId} on port ${mainPort}`);
-    
+    const mainPort = await findFreePort(
+      PORT_RANGES[appType].start,
+      PORT_RANGES[appType].end,
+    );
+
+    console.log(
+      `[LOG] Starting main container ${mainContainerId} on port ${mainPort}`,
+    );
+
     const mainResult = await runCommand("docker", [
       "run",
       "-d",
@@ -559,12 +567,14 @@ async function createAppDeployment(
       networkName,
       "--name",
       mainContainerId,
-      ...Object.entries(config.envVars || {}).flatMap(([k, v]) => ["-e", `${k}=${v}`]),
+      ...Object.entries(config.envVars || {}).flatMap((
+        [k, v],
+      ) => ["-e", `${k}=${v}`]),
       "-p",
       `${mainPort}:${config.containerPort}`,
       `--cpus=${config.main.cpu}`,
       `--memory=${config.main.memory}`,
-      config.image
+      config.image,
     ]);
 
     if (mainResult.code !== 0) {
@@ -573,8 +583,8 @@ async function createAppDeployment(
 
     containers.push({
       id: mainContainerId,
-      type: 'main',
-      port: mainPort
+      type: "main",
+      port: mainPort,
     });
 
     return { containers };
@@ -591,7 +601,9 @@ app.post("/create-app", async (c) => {
     const body: AppRequest = await c.req.json();
     const { type, deploymentId } = body;
 
-    console.log(`[LOG] Creating application of type ${type} with ID ${deploymentId}`);
+    console.log(
+      `[LOG] Creating application of type ${type} with ID ${deploymentId}`,
+    );
 
     const config = APP_CONFIGS[type];
     if (!config) {
@@ -605,19 +617,19 @@ app.post("/create-app", async (c) => {
       deploymentId,
       type,
       networkName,
-      config
+      config,
     );
 
     return c.json({
       deploymentId,
       networkName,
-      containers: result.containers
+      containers: result.containers,
     });
   } catch (error) {
     console.error(`[ERROR] Create-app failed: ${error.message}`);
     return c.json({
       error: "Failed to create application",
-      details: error.message
+      details: error.message,
     }, 500);
   }
 });
@@ -632,7 +644,7 @@ app.post("/start-deployment", async (c) => {
     if (!networkExists) {
       return c.json({
         error: "Deployment network not found",
-        details: `Network ${deploymentId}-network does not exist`
+        details: `Network ${deploymentId}-network does not exist`,
       }, 404);
     }
 
@@ -643,7 +655,7 @@ app.post("/start-deployment", async (c) => {
     } catch (error) {
       return c.json({
         error: "Deployment not found",
-        details: error.message
+        details: error.message,
       }, 404);
     }
 
@@ -653,7 +665,7 @@ app.post("/start-deployment", async (c) => {
       if (startResult.code !== 0) {
         return c.json({
           error: "Failed to start container",
-          details: `Failed to start ${container.id}: ${startResult.stderr}`
+          details: `Failed to start ${container.id}: ${startResult.stderr}`,
         }, 500);
       }
       console.log(`[LOG] Started container ${container.id}`);
@@ -662,16 +674,16 @@ app.post("/start-deployment", async (c) => {
     return c.json({
       status: "started",
       deploymentId,
-      containers: containers.map(c => ({
+      containers: containers.map((c) => ({
         id: c.id,
         type: c.type,
-        status: "running"
-      }))
+        status: "running",
+      })),
     });
   } catch (error) {
     return c.json({
       error: "Failed to start deployment",
-      details: error.message
+      details: error.message,
     }, 500);
   }
 });
@@ -687,7 +699,7 @@ app.post("/stop-deployment", async (c) => {
     } catch (error) {
       return c.json({
         error: "Deployment not found",
-        details: error.message
+        details: error.message,
       }, 404);
     }
 
@@ -697,7 +709,7 @@ app.post("/stop-deployment", async (c) => {
       if (stopResult.code !== 0) {
         return c.json({
           error: "Failed to stop container",
-          details: `Failed to stop ${container.id}: ${stopResult.stderr}`
+          details: `Failed to stop ${container.id}: ${stopResult.stderr}`,
         }, 500);
       }
       console.log(`[LOG] Stopped container ${container.id}`);
@@ -706,16 +718,16 @@ app.post("/stop-deployment", async (c) => {
     return c.json({
       status: "stopped",
       deploymentId,
-      containers: containers.map(c => ({
+      containers: containers.map((c) => ({
         id: c.id,
         type: c.type,
-        status: "stopped"
-      }))
+        status: "stopped",
+      })),
     });
   } catch (error) {
     return c.json({
       error: "Failed to stop deployment",
-      details: error.message
+      details: error.message,
     }, 500);
   }
 });
@@ -731,10 +743,12 @@ app.post("/delete-deployment", async (c) => {
       containers = await getDeploymentContainers(deploymentId);
     } catch (error) {
       // If no containers found, just try to remove network
-      await runCommand("docker", ["network", "rm", networkName]).catch(() => {});
+      await runCommand("docker", ["network", "rm", networkName]).catch(
+        () => {},
+      );
       return c.json({
         error: "Deployment not found",
-        details: error.message
+        details: error.message,
       }, 404);
     }
 
@@ -752,18 +766,21 @@ app.post("/delete-deployment", async (c) => {
     return c.json({
       status: "deleted",
       deploymentId,
-      details: "Deployment and all associated resources have been removed"
+      details: "Deployment and all associated resources have been removed",
     });
   } catch (error) {
     return c.json({
       error: "Failed to delete deployment",
-      details: error.message
+      details: error.message,
     }, 500);
   }
 });
 
 // Helper function for deployment cleanup
-async function cleanupDeployment(deploymentId: string, networkName: string): Promise<void> {
+async function cleanupDeployment(
+  deploymentId: string,
+  networkName: string,
+): Promise<void> {
   const containers = await getDeploymentContainers(deploymentId);
 
   // Stop and remove containers
@@ -775,7 +792,6 @@ async function cleanupDeployment(deploymentId: string, networkName: string): Pro
   // Remove network
   await runCommand("docker", ["network", "rm", networkName]).catch(() => {});
 }
-
 
 // Cleanup unused networks
 async function cleanupNetworks() {
@@ -825,7 +841,9 @@ export async function cleanupUnusedResources() {
 }
 
 // Add this function near the other helper functions
-async function getDeploymentContainers(deploymentId: string): Promise<Array<{id: string, type: string}>> {
+async function getDeploymentContainers(
+  deploymentId: string,
+): Promise<Array<{ id: string; type: string }>> {
   try {
     // First check if any containers exist with this deployment ID
     const ps = await runCommand("docker", [
@@ -834,15 +852,15 @@ async function getDeploymentContainers(deploymentId: string): Promise<Array<{id:
       "--filter",
       `name=${deploymentId}`,
       "--format",
-      "{{.Names}}"
+      "{{.Names}}",
     ]);
 
     if (ps.code !== 0) {
       throw new Error(`Failed to list containers: ${ps.stderr}`);
     }
 
-    const containerNames = ps.stdout.trim().split('\n').filter(name => name);
-    
+    const containerNames = ps.stdout.trim().split("\n").filter((name) => name);
+
     if (containerNames.length === 0) {
       throw new Error(`No containers found for deployment: ${deploymentId}`);
     }
@@ -855,25 +873,29 @@ async function getDeploymentContainers(deploymentId: string): Promise<Array<{id:
         console.error(`[ERROR] Container ${name} not found`);
         continue;
       }
-      
+
       containers.push({
         id: name,
-        type: name.endsWith('-db') ? 'database' : 'main'
+        type: name.endsWith("-db") ? "database" : "main",
       });
     }
 
     if (containers.length === 0) {
-      throw new Error(`No valid containers found for deployment: ${deploymentId}`);
+      throw new Error(
+        `No valid containers found for deployment: ${deploymentId}`,
+      );
     }
 
     // Sort containers so database is handled appropriately
     return containers.sort((a, b) => {
-      if (a.type === 'database') return -1;
-      if (b.type === 'database') return 1;
+      if (a.type === "database") return -1;
+      if (b.type === "database") return 1;
       return 0;
     });
   } catch (error) {
-    console.error(`[ERROR] Failed to get deployment containers: ${error.message}`);
+    console.error(
+      `[ERROR] Failed to get deployment containers: ${error.message}`,
+    );
     throw error;
   }
 }
@@ -884,7 +906,7 @@ async function checkDeploymentNetwork(deploymentId: string): Promise<boolean> {
   const result = await runCommand("docker", [
     "network",
     "inspect",
-    networkName
+    networkName,
   ]);
   return result.code === 0;
 }
