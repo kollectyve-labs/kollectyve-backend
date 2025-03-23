@@ -3,6 +3,34 @@ import { eq, and, sql } from "drizzle-orm";
 import { db } from "../db.ts";
 import { providers, providerResources, appDeployments, developerVms } from "../../drizzle/schema.ts";
 
+const MODE: keyof typeof CONFIG = Deno.env.get("KUMULUS_MODE") === "production" ? "production" : "test";
+
+
+// Configuration for different environments
+interface ProviderConfig {
+  baseUrl: string;
+  developerId: string;
+  providerResourceId: string;
+}
+
+const CONFIG = {
+  test: {
+    baseUrl: "http://localhost:8800",
+    developerId: "42115ec2-376a-489c-8300-94984aba72fa",
+    providerResourceId: "a6ae7e2f-e89a-4477-b3ac-ea4607c4599f"
+  },
+  production: {
+    developerId: "42115ec2-376a-489c-8300-94984aba72fa"
+  }
+} as const;
+
+
+export interface SelectedProvider {
+  id: string;
+  resourceId: string;
+  ip: string;
+}
+
 
 // Insert Provider.
 export async function insertProvider(providerObj: typeof providersSchema) {
@@ -28,11 +56,19 @@ export async function deleteProvider(providerObj: typeof providersSchema) {
   );
 }
 
-// Simple Provider Selection Algorithm based on the score and deployment count
-export async function selectProvider() {
+// Modified provider selection function
+export async function selectProvider(): Promise<SelectedProvider> {
+  if (MODE === "test") {
+    return {
+      id: CONFIG.test.providerResourceId,
+      resourceId: CONFIG.test.providerResourceId,
+      ip: CONFIG.test.baseUrl
+    };
+  }
+
+  // Your existing provider selection logic for production
   try {
-    // Get active providers with their deployment counts
-    const providersWithLoad = await db
+    const provider = await db
       .select({
         providerId: providers.id,
         resourceId: providerResources.id,
@@ -47,33 +83,37 @@ export async function selectProvider() {
       .innerJoin(providerResources, eq(providers.id, providerResources.providerId))
       .leftJoin(appDeployments, eq(providerResources.id, appDeployments.providerResourceId))
       .leftJoin(developerVms, eq(providerResources.id, developerVms.providerResourceId))
-      .where(
-        and(
-          eq(providers.isActive, true)
-        )
-      )
+      .where(eq(providers.isActive, true))
       .groupBy(providers.id, providerResources.id)
       .orderBy(sql`${providers.score} DESC`)
       .execute();
 
-    // Find the first provider with less than 5 deployments
-    const selectedProvider = providersWithLoad.find(p => p.deploymentCount < 5);
-
+    const selectedProvider = provider.find(p => p.deploymentCount < 5);
+    
     if (!selectedProvider) {
-      console.log("[LOG] No providers available with capacity < 5 deployments");
-      return null;
+      throw new Error("No providers available with capacity");
     }
-
-    console.log(`[LOG] Selected provider ${selectedProvider.providerId} with ${selectedProvider.deploymentCount} deployments`);
 
     return {
       id: selectedProvider.providerId,
       resourceId: selectedProvider.resourceId,
-      ip: selectedProvider.ipAddress
+      ip: `http://${selectedProvider.ipAddress}`
     };
-
   } catch (error) {
-    console.error("[ERROR] Provider selection failed:", error);
-    return null;
+    if (MODE === "test") {
+      // Fallback to test config if production fails
+      console.warn("[WARN] Production provider selection failed, falling back to test mode");
+      return {
+        id: CONFIG.test.providerResourceId,
+        resourceId: CONFIG.test.providerResourceId,
+        ip: CONFIG.test.baseUrl
+      };
+    }
+    throw error;
   }
+}
+
+// Helper function to get developer ID consistently
+export function getCurrentDeveloperId(): string {
+  return CONFIG[MODE].developerId;
 }

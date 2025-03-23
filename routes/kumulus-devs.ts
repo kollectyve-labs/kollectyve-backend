@@ -7,7 +7,7 @@ import {
   from "../database/kumulus/app-deployments.ts";
 import { z } from "npm:zod";
 import { APP_TYPES } from "../utils/constants.ts";
-import { selectProvider } from "../database/kumulus/providers.ts";
+import { selectProvider, getCurrentDeveloperId } from "../database/kumulus/providers.ts";
 
 // Request/Response Types
 interface CreateVMRequest {
@@ -78,29 +78,20 @@ kumulusdevs.post("/create-vm", async (c) => {
     const provider = await selectProvider();
     if (!provider) {
       return c.json({ error: "No provider available with capacity" }, 503);
-    } else {
-      console.log("[LOG] Provider selected:", provider);
     }
-    
-    // const response = await fetch(`${provider.ip}/create-vm`, {
-    const response = await fetch("http://localhost:8800/create-vm", {
 
+    const response = await fetch(`${provider.ip}/create-vm`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(validatedData),
     });
 
     const data = await response.json();
-    console.log("[LOG] VM creation response:", data);
-
 
     if (response.ok) {
       await insertDeveloperVm({
-        //developerId: validatedData.username,
-        // providerId: provider.id,
-        developerId: "42115ec2-376a-489c-8300-94984aba72fa",
-        //providerId: "localprovider",
-        providerResourceId: "a6ae7e2f-e89a-4477-b3ac-ea4607c4599f",
+        developerId: getCurrentDeveloperId(),
+        providerResourceId: provider.resourceId,
         containerId: data.vmId,
         ram: parseInt(validatedData.memory),
         cpuCores: validatedData.cpu,
@@ -246,13 +237,9 @@ kumulusdevs.post("/create-app", async (c) => {
     const provider = await selectProvider();
     if (!provider) {
       return c.json({ error: "No provider available with capacity" }, 503);
-    } else {
-      console.log("[LOG] Provider selected:", provider);
     }
 
-    // Generate a deploymentId if not provided
     const deploymentId = crypto.randomUUID();
-
     const provisionerRequest = {
       type: validatedData.appType,
       cpu: validatedData.cpu,
@@ -260,8 +247,7 @@ kumulusdevs.post("/create-app", async (c) => {
       deploymentId: deploymentId
     };
 
-    // Call provisioner to create app
-    const response = await fetch("http://localhost:8800/create-app", {
+    const response = await fetch(`${provider.ip}/create-app`, {
       method: "POST", 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(provisionerRequest),
@@ -274,7 +260,7 @@ kumulusdevs.post("/create-app", async (c) => {
       // Insert App Deployment
       await insertAppDeployment({
         id: deploymentId,
-        developerId: "42115ec2-376a-489c-8300-94984aba72fa",
+        developerId: getCurrentDeveloperId(),
         providerResourceId: provider.resourceId,
         appType: validatedData.appType, 
         networkName: `${deploymentId}-network`,
