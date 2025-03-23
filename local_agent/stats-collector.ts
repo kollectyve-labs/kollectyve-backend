@@ -334,5 +334,4 @@ export class StatsCollector {
       */
     await this.setupWallet();
   }
-  
 }

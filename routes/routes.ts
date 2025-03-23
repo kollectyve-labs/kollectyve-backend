@@ -5,4 +5,4 @@ import { kumulusdevs } from "./kumulus-devs.ts";
 import { kallama } from "./kallama.ts";
 import { kleapai } from "./kleapai.ts";
 
-export { auth, faucet, kumulus, kumulusdevs, kallama, kleapai };
+export { auth, faucet, kallama, kleapai, kumulus, kumulusdevs };

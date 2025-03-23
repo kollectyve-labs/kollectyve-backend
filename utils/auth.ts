@@ -1,4 +1,4 @@
-import type { HealthStat,  UserData } from "./models.ts";
+import type { HealthStat, UserData } from "./models.ts";
 import {
   createUserWithEmailAndPassword,
   getAuth,
@@ -8,7 +8,6 @@ import { initializeApp } from "@firebase/app";
 import "jsr:@std/dotenv/load";
 
 import type { ProviderData } from "./models.ts";
-
 
 const firebaseConfig = {
   apiKey: Deno.env.get("FB_API_KEY"),
@@ -24,7 +23,7 @@ const fbAuth = getAuth(firebaseApp);
 export async function registerUser(
   email: string,
   password: string,
-  appId?: string
+  appId?: string,
 ) {
   const userCredential = await createUserWithEmailAndPassword(
     fbAuth,
